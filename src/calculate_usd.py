@@ -113,13 +113,13 @@ def calculate_usd_for_base_token(amount, chain_id):
         decimals = 18
     elif chain_id == 10:
         symbol = 'eth'
-        decimals = 14
+        decimals = 18
     elif chain_id == 56:
         symbol = 'bnb'
         decimals = 18
     elif chain_id == 250:
         symbol = 'ftm'
-        decimals = 14
+        decimals = 18
     elif chain_id == 42161:
         symbol = 'eth'
         decimals = 18
