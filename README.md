@@ -18,6 +18,10 @@ exchanger. In each case, we try to determine whether the suspicious address is n
 the explorer of the corresponding network in the place that contains data on the number of transactions of this 
 address, and if this number is less than the threshold specified in the settings, the address is considered new.
 
+
+:warning: To enable DEX-related alerts please change `DEX_DISABLE` to `False` in `src/config.py`.
+
+
 ## Features
 
 - Fully asynchronous local database to save the addresses in case of crash
