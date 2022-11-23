@@ -58,7 +58,7 @@ def get_the_amount_of_tx(address, chain_id):
 
     except Exception as e:
         print(f"Unable to get the amount of transactions for the address ({address}): {e}")
-        amount_of_transactions = 0
+        amount_of_transactions = NEWLY_CREATED_MAX_TRANSACTIONS_AMOUNT
 
     return amount_of_transactions
 
