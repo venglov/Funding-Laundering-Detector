@@ -9,7 +9,7 @@ with open("./src/gecko_tokens.json", 'r') as file:
     gecko_tokens = json.load(file)
 
 
-def update_top_currencies_info():
+def update_top_currencies_info(initial_values=None):
     """
     Request latest prices from Gecko API
     :return:
@@ -33,11 +33,17 @@ def update_top_currencies_info():
         response = requests.get('https://api.coingecko.com/api/v3/coins/markets', params=params, headers=headers)
         top_currencies_info = response.json()
         for tci in top_currencies_info:
-            if tci['symbol'] == 'bitcoin':
+            if tci['id'] == 'bitcoin':
+                with open("./src/gecko_initial.json", 'w') as gecko_initial_file:  # get abi from the file
+                    json.dump(top_currencies_info, gecko_initial_file)
                 break
-    except Exception as _:
-        print("Error trying to get the tokens using Gecko API")
-        top_currencies_info = top_currencies_info_back
+
+    except Exception as e:
+        if initial_values:
+            top_currencies_info = initial_values
+        else:
+            print(f"Error trying to get the tokens using Gecko API: {e}")
+            top_currencies_info = top_currencies_info_back
     top_currencies_info_back = top_currencies_info
 
 

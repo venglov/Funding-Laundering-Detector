@@ -62,7 +62,6 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                 if not (confirmed_targets[from_]['type'] == 'dex' and DEX_DISABLE):
                     eoa, newly_created = analyze_address(address=to)  # check is target eoa? and is it newly created?
                     if len(findings) < 10 and eoa:
-
                         # append our finding
                         findings.append(
                             FundingLaunderingFindings.funding(from_, to, usd, token.upper(), newly_created,
@@ -73,7 +72,6 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                 if not (confirmed_targets[to]['type'] == 'dex' and DEX_DISABLE):
                     eoa, newly_created = analyze_address(address=from_)  # check is target eoa? and is it newly created?
                     if len(findings) < 10 and eoa:
-
                         # append our finding
                         findings.append(
                             FundingLaunderingFindings.laundering(from_, to, usd, token.upper(), newly_created,
@@ -164,7 +162,7 @@ async def analyze_blocks(block_event: forta_agent.block_event.BlockEvent) -> Non
     """
     global possible_targets
     global confirmed_targets
-    if block_event.block_number % 20 == 0:
+    if int(block_event.block_number) % 20 == 0:
         update_top_currencies_info()
 
     block = int(block_event.block_number)
@@ -197,7 +195,9 @@ async def my_initialize():
     possible_targets = {}
     confirmed_targets = {}
 
-    update_top_currencies_info()
+    with open("./src/gecko_initial.json", 'r') as gecko_initial_file:  # get abi from the file
+        gecko_initial = json.load(gecko_initial_file)
+    update_top_currencies_info(initial_values=gecko_initial)
 
     # initialize database tables
     addresses_table = await init_async_db(TEST_MODE)
