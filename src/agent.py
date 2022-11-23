@@ -219,13 +219,13 @@ async def main(event: forta_agent.transaction_event.TransactionEvent | forta_age
     This function is used to start logic functions in the different threads and then gather the findings
     """
     global initialized
+    if not initialized:
+        await my_initialize()
     if isinstance(event, forta_agent.transaction_event.TransactionEvent):
         return await asyncio.gather(
             analyze_transaction(event),
         )
     else:
-        if not initialized:
-            await my_initialize()
         await asyncio.gather(
             analyze_blocks(event),
         )
