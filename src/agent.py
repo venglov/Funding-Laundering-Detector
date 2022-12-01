@@ -128,7 +128,7 @@ def analyze_address(address):
     :return: (bool, bool)
     """
     eoa = is_eoa(address)
-    newly_created = is_newly_created(address, CHAIN_ID)
+    newly_created = is_newly_created(address, web3)
 
     return eoa, newly_created
 

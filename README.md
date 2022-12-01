@@ -14,9 +14,9 @@ well at the moment, it would be worthwhile to translate or improve the classific
 future. Having addresses of bridges, exchangers and mixers, the bot monitors transfers of funds to these addresses 
 (network native tokens and ERC20) and creates an alert if the amount in USD equivalent is more than the threshold 
 specified in the settings. The type of alert depends on whether funds are being received or withdrawn from the 
-exchanger. In each case, we try to determine whether the suspicious address is new or not. To do this, the bot parses 
+exchanger. In each case, we try to determine whether the suspicious address is new or not. ~~To do this, the bot parses 
 the explorer of the corresponding network in the place that contains data on the number of transactions of this 
-address, and if this number is less than the threshold specified in the settings, the address is considered new.
+address, and~~ if this number is less than the threshold specified in the settings, the address is considered new.
 
 
 :warning: To enable DEX-related alerts please change `DEX_DISABLE` to `False` in `src/config.py`.

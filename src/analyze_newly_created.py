@@ -1,5 +1,6 @@
 import re
 import requests
+from web3 import Web3
 
 from src.config import NEWLY_CREATED_MAX_TRANSACTIONS_AMOUNT
 
@@ -20,6 +21,7 @@ headers_etherscan = {
 
 def get_the_amount_of_tx(address, chain_id):
     """
+    THIS FUNCTION IS DEPRECATED AND WILL BE REMOVED
     This function is used to parse explorer to extract the number of transactions
     :param address:
     :param chain_id:
@@ -63,8 +65,8 @@ def get_the_amount_of_tx(address, chain_id):
     return amount_of_transactions
 
 
-def is_newly_created(address, chain_id):
-    amount_of_transactions = get_the_amount_of_tx(address, chain_id)
+def is_newly_created(address, web3):
+    amount_of_transactions = web3.eth.get_transaction_count(Web3.toChecksumAddress(address.lower()))
 
     if amount_of_transactions < NEWLY_CREATED_MAX_TRANSACTIONS_AMOUNT:
         return True
