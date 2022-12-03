@@ -4,9 +4,9 @@
 
 ## Changelog
 - 1.0.0 (03.12.2022):
-  - For newly created accounts new finding type was introduced - FLD_NEW_FUNDING. It has `Critical` severity if account was funded using bridge / mixer / unknown source and High severity if it was funded using dex or cex. 
+  - For newly created accounts new finding type was introduced - FLD_NEW_FUNDING. It has `Critical` severity if account was funded using bridge / mixer / unknown source and `High` severity if it was funded using dex or cex. 
   - `newly_created` field removed from metadata in FLD_FUNDING
-  - `Info` severity added to the FLD_FUNDING and FLD_LAUNDERING, it's threshold is controlled by `LAUNDERING_LOW` and `FUNDING_LOW` in `config.py`. The alerts with `Info` severity disabled by default but can be enabled in the config using `INFO_ALERTS`
+  - `Info` severity was added to the FLD_FUNDING and FLD_LAUNDERING, it's upper threshold is controlled by `LAUNDERING_LOW` and `FUNDING_LOW` in `config.py`. The alerts with `Info` severity are disabled by default but can be enabled in the config using `INFO_ALERTS`
   - Default config values updated in the next fields:
     - TRANSFER_THRESHOLD_IN_USD = 20  # Bot doesn't emit alerts if value in usd is below this
     - FUNDING_CRITICAL = 10000000  # Critical th for funding
