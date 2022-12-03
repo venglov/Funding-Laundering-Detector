@@ -5,26 +5,26 @@ from src.config import FUNDING_CRITICAL, FUNDING_HIGH, FUNDING_MEDIUM, LAUNDERIN
 
 
 def get_severity(usd):
-    if usd > FUNDING_CRITICAL:
+    if usd >= FUNDING_CRITICAL:
         return FindingSeverity.Critical
-    elif usd > FUNDING_HIGH:
+    elif usd >= FUNDING_HIGH:
         return FindingSeverity.High
-    elif usd > FUNDING_MEDIUM:
+    elif usd >= FUNDING_MEDIUM:
         return FindingSeverity.Medium
-    elif usd > FUNDING_LOW:
+    elif usd >= FUNDING_LOW:
         return FindingSeverity.Low
     else:
         return FindingSeverity.Info
 
 
 def get_severity_laundering(usd):
-    if usd > LAUNDERING_CRITICAL:
+    if usd >= LAUNDERING_CRITICAL:
         return FindingSeverity.Critical
-    elif usd > LAUNDERING_HIGH:
+    elif usd >= LAUNDERING_HIGH:
         return FindingSeverity.High
-    elif usd > LAUNDERING_MEDIUM:
+    elif usd >= LAUNDERING_MEDIUM:
         return FindingSeverity.Medium
-    elif usd > LAUNDERING_LOW:
+    elif usd >= LAUNDERING_LOW:
         return FindingSeverity.Low
     else:
         return FindingSeverity.Info
