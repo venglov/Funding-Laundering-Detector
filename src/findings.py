@@ -75,7 +75,7 @@ class FundingLaunderingFindings:
             'name': f'Newly Created Account Funding Alert',
             'description': f'new {to} was funded using {type_ if not type_ == "unknown" else ""} {from_}',
             'alert_id': 'FLD_NEW_FUNDING',
-            'severity': FindingSeverity.Critical if type_ != 'exchange' or type_ != 'dex' else FindingSeverity.High,
+            'severity': FindingSeverity.Critical if type_ != 'exchange' and type_ != 'dex' else FindingSeverity.High,
             'type': FindingType.Suspicious,
             'metadata': {
                 'funded_address': to,
