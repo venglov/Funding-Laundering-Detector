@@ -2,6 +2,26 @@
 
 ---
 
+## Changelog
+- 1.0.0 (03.12.2022):
+  - For newly created accounts new finding type was introduced - FLD_NEW_FUNDING. It has `Critical` severity if account was funded using bridge / mixer / unknown source and High severity if it was funded using dex or cex. 
+  - `newly_created` field removed from metadata in FLD_FUNDING
+  - `Info` severity added to the FLD_FUNDING and FLD_LAUNDERING, it's threshold is controlled by `LAUNDERING_LOW` and `FUNDING_LOW` in `config.py`. The alerts with `Info` severity disabled by default but can be enabled in the config using `INFO_ALERTS`
+  - Default config values updated in the next fields:
+    - TRANSFER_THRESHOLD_IN_USD = 20  # Bot doesn't emit alerts if value in usd is below this
+    - FUNDING_CRITICAL = 10000000  # Critical th for funding
+    - FUNDING_HIGH = 1000000  # High th for funding
+    - FUNDING_MEDIUM = 100000  # Medium th for funding
+    - FUNDING_LOW = 10000  # Low th for funding
+    - LAUNDERING_CRITICAL = 10000000  # Critical th for laundering
+    - LAUNDERING_HIGH = 1000000  # High th for laundering
+    - LAUNDERING_MEDIUM = 100000  # Medium th for laundering
+    - LAUNDERING_LOW = 10000  # Low th for laundering
+    - DEX_DISABLE = False  # Disables DEX-related alerts
+  - Tests adjusted.
+- 0.1.0 (01.12.2022):
+  - check if account is newly created now using function from web3 library instead of the explorer parsing.
+
 ## Description
 
 The goal of this agent is to identify mixers, bridges, exchanges generically, such that any funding and money laundering
@@ -20,6 +40,7 @@ address, and~~ if this number is less than the threshold specified in the settin
 
 
 :warning: To enable DEX-related alerts please change `DEX_DISABLE` to `False` in `src/config.py`.
+:warning: To enable INFO alerts please change `INFO_ALERTS` to `True` in `src/config.py`.
 
 
 ## Features
@@ -53,10 +74,23 @@ You can specify your own settings in the `src/config.py`:
         - `High` - transfer in USD > High threshold
         - `Medium` - transfer in USD > Medium threshold
         - `Low` - transfer in USD < Medium threshold
+        - `Info` - transfer in USD < Low threshold (disabled by default)
+    - Type is "Suspicious" if Severity is not "Info" else it is also "Info"
+    - Metadata contains:
+        - `funded_address` - funded address
+        - `source_address` - address of cex / dex / bridge / mixer
+        - `source_type` - centralized exchange / dex / bridge / mixer
+        - `usd_volume` - transfer amount in USD
+        - `tx_hash` - the hash of the transaction
+
+- FLD_NEW_FUNDING
+    - Fired when the newly created account was funded by cex / dex / bridge / mixer'
+    - Severity:
+        - `Critical` - account was funded using bridge / mixer / unknown
+        - `High` - account was funded using cex / dex
     - Type is always set to "Suspicious"
     - Metadata contains:
         - `funded_address` - funded address
-        - `newly_created` - is EOA newly created or not
         - `source_address` - address of cex / dex / bridge / mixer
         - `source_type` - centralized exchange / dex / bridge / mixer
         - `usd_volume` - transfer amount in USD
@@ -69,7 +103,8 @@ You can specify your own settings in the `src/config.py`:
         - `High` - transfer in USD > High threshold
         - `Medium` - transfer in USD > Medium threshold
         - `Low` - transfer in USD < Medium threshold
-    - Type is always set to "Suspicious"
+        - `Info` - transfer in USD < Low threshold (disabled by default)
+    - Type is "Suspicious" if Severity is not "Info" else it is also "Info"
     - Metadata contains:
         - `laundering_address` - EOA address
         - `newly_created` - is EOA newly created or not
@@ -84,14 +119,14 @@ Tests and test data use database preset `test/database_presets/test_14442765-144
 data. It should be moved to `./test.db` e.g.
 
 ```bash
-cp ./test/database_presets/main.db ./main.db
+cp ./database_presets/main.db ./main.db
 ```
 
 There are 17 tests that should pass:
 
 ```python
 test_returns_zero_finding_if_the_amount_is_small()
-test_returns_critical_finding_if_the_amount_is_big_erc20_new_address_FLD_FUNDING()
+test_returns_critical_finding_if_new_address_FLD_FUNDING()
 test_returns_high_finding_if_the_amount_is_big_erc20_old_address_FLD_FUNDING()
 test_returns_low_finding_if_the_amount_is_low_erc20_old_address_FLD_FUNDING()
 test_returns_critical_finding_if_new_address_ETH_FLD_FUNDING()
@@ -111,7 +146,7 @@ test_returns_critical_finding_if_the_amount_is_critical_erc20_old_address_FLD_La
 
 ## Test Data
 
-Example of the alert:
+(Could be outdated) Example of the alert:
 
 ```
 1 findings for transaction 0x5e37371ddeb4f249fcae38ff0cfebc022467c04df5e5586fdf52536a013b719a {

@@ -47,7 +47,7 @@ class TestFLDAgent:
         findings = provide_handle_transaction()(tx_event)
         assert len(findings) == 0
 
-    def test_returns_critical_finding_if_the_amount_is_big_erc20_new_address_FLD_FUNDING(self):
+    def test_returns_critical_finding_if_new_address_FLD_FUNDING(self):
         tx_event = create_transaction_event({
             'transaction': {
                 'from': BINANCE_ADDRESS,
@@ -58,13 +58,13 @@ class TestFLDAgent:
                 'number': 1,
             },
             'logs': [
-                transfer_event(BINANCE_ADDRESS, NEW_ADDRESS, 1000000000,
+                transfer_event(BINANCE_ADDRESS, NEW_ADDRESS, 10000000000,
                                "0xdAC17F958D2ee523a2206206994597C13D831ec7")]})
 
         findings = provide_handle_transaction()(tx_event)
         assert len(findings) == 1
         assert findings[0].severity == FindingSeverity.Critical
-        assert findings[0].alert_id == "FLD_FUNDING"
+        assert findings[0].alert_id == "FLD_NEW_FUNDING"
 
     def test_returns_high_finding_if_the_amount_is_big_erc20_old_address_FLD_FUNDING(self):
         tx_event = create_transaction_event({
@@ -96,7 +96,7 @@ class TestFLDAgent:
                 'number': 1,
             },
             'logs': [
-                transfer_event(BINANCE_ADDRESS, OLD_ADDRESS, 1000000000,
+                transfer_event(BINANCE_ADDRESS, OLD_ADDRESS, 10000000000,
                                "0xdAC17F958D2ee523a2206206994597C13D831ec7")]})
 
         findings = provide_handle_transaction()(tx_event)
@@ -109,7 +109,7 @@ class TestFLDAgent:
             'transaction': {
                 'from': BINANCE_ADDRESS,
                 'to': OLD_ADDRESS,
-                'value': 1000000000000000000000,
+                'value': 10000000000000000000000,
             },
             'block': {
                 'number': 1,
@@ -143,7 +143,7 @@ class TestFLDAgent:
             'transaction': {
                 'from': BINANCE_ADDRESS,
                 'to': OLD_ADDRESS,
-                'value': 100000000000000000000,
+                'value': 1000000000000000000000,
             },
             'block': {
                 'number': 1,
@@ -160,7 +160,7 @@ class TestFLDAgent:
             'transaction': {
                 'from': BINANCE_ADDRESS,
                 'to': OLD_ADDRESS,
-                'value': 10000000000000000000,
+                'value': 100000000000000000000,
             },
             'block': {
                 'number': 1,
@@ -177,7 +177,7 @@ class TestFLDAgent:
             'transaction': {
                 'from': BINANCE_ADDRESS,
                 'to': OLD_ADDRESS,
-                'value': 1000000000000000000,
+                'value': 10000000000000000000,
             },
             'block': {
                 'number': 1,
@@ -211,7 +211,7 @@ class TestFLDAgent:
             'transaction': {
                 'from': OLD_ADDRESS,
                 'to': BINANCE_ADDRESS,
-                'value': 100000000000000000000,
+                'value': 1000000000000000000000,
             },
             'block': {
                 'number': 1,
@@ -228,7 +228,7 @@ class TestFLDAgent:
             'transaction': {
                 'from': OLD_ADDRESS,
                 'to': BINANCE_ADDRESS,
-                'value': 10000000000000000000,
+                'value': 100000000000000000000,
             },
             'block': {
                 'number': 1,
@@ -245,7 +245,7 @@ class TestFLDAgent:
             'transaction': {
                 'from': OLD_ADDRESS,
                 'to': BINANCE_ADDRESS,
-                'value': 500000000000000000,
+                'value': 50000000000000000000,
             },
             'block': {
                 'number': 1,
@@ -268,7 +268,7 @@ class TestFLDAgent:
                 'number': 1,
             },
             'logs': [
-                transfer_event(OLD_ADDRESS, BINANCE_ADDRESS, 1000000000,
+                transfer_event(OLD_ADDRESS, BINANCE_ADDRESS, 10000000000,
                                "0xdAC17F958D2ee523a2206206994597C13D831ec7")]})
 
         findings = provide_handle_transaction()(tx_event)
@@ -325,7 +325,7 @@ class TestFLDAgent:
                 'number': 1,
             },
             'logs': [
-                transfer_event(OLD_ADDRESS, BINANCE_ADDRESS, 5000000000000,
+                transfer_event(OLD_ADDRESS, BINANCE_ADDRESS, 50000000000000,
                                "0xdAC17F958D2ee523a2206206994597C13D831ec7")]})
 
         findings = provide_handle_transaction()(tx_event)

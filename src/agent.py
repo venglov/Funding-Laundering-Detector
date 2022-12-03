@@ -13,7 +13,8 @@ from src.db.controller import init_async_db
 from src.findings import FundingLaunderingFindings
 from src.mixer_bridge_exchange import check_is_mixer_bridge_exchange
 from src.utils import extract_argument
-from src.config import TRANSFERS_TO_CONFIRM, TEST_MODE, TRANSFER_THRESHOLD_IN_USD, DEX_DISABLE
+from src.config import TRANSFERS_TO_CONFIRM, TEST_MODE, TRANSFER_THRESHOLD_IN_USD, DEX_DISABLE, LAUNDERING_LOW, \
+    INFO_ALERTS, FUNDING_LOW
 
 initialized = False
 
@@ -59,17 +60,25 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
         if usd > TRANSFER_THRESHOLD_IN_USD and from_ != NULL_ADDRESS and to != NULL_ADDRESS:
             # FUNDING
             if from_ in confirmed_targets_keys and to not in confirmed_targets_keys:  # if we know initiator...
-                if not (confirmed_targets[from_]['type'] == 'dex' and DEX_DISABLE):
+                if confirmed_targets[from_]['type'] != 'dex' or not DEX_DISABLE:
                     eoa, newly_created = analyze_address(address=to)  # check is target eoa? and is it newly created?
                     if len(findings) < 10 and eoa:
                         # append our finding
-                        findings.append(
-                            FundingLaunderingFindings.funding(from_, to, usd, token.upper(), newly_created,
-                                                              confirmed_targets[from_]['type'], transaction_event.hash))
+                        if newly_created:
+                            findings.append(
+                                FundingLaunderingFindings.funding_newly_created(from_, to, usd, token.upper(),
+                                                                                confirmed_targets[from_]['type'],
+                                                                                transaction_event.hash))
+                        elif usd >= FUNDING_LOW or INFO_ALERTS:
+                            findings.append(
+                                FundingLaunderingFindings.funding(from_, to, usd, token.upper(),
+                                                                  confirmed_targets[from_]['type'],
+                                                                  transaction_event.hash))
 
             # LAUNDERING
             elif to in confirmed_targets_keys and from_ not in confirmed_targets_keys:  # if we know target...
-                if not (confirmed_targets[to]['type'] == 'dex' and DEX_DISABLE):
+                if not (confirmed_targets[to]['type'] == 'dex' and DEX_DISABLE) and (
+                        usd >= LAUNDERING_LOW or INFO_ALERTS):
                     eoa, newly_created = analyze_address(address=from_)  # check is target eoa? and is it newly created?
                     if len(findings) < 10 and eoa:
                         # append our finding
@@ -91,17 +100,25 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
         # FUNDING
         if from_ in confirmed_targets_keys and to not in confirmed_targets_keys:
             usd, token = calculate_usd_and_get_symbol(web3, event.address.lower(), ERC20_ABI, value)
-            if usd > TRANSFER_THRESHOLD_IN_USD and not (confirmed_targets[from_]['type'] == 'dex' and DEX_DISABLE):
+            if usd > TRANSFER_THRESHOLD_IN_USD and (confirmed_targets[from_]['type'] != 'dex' or not DEX_DISABLE):
                 eoa, newly_created = analyze_address(address=to)
                 if len(findings) < 10 and eoa:
-                    findings.append(
-                        FundingLaunderingFindings.funding(from_, to, usd, token.upper(), newly_created,
-                                                          confirmed_targets[from_]['type'], transaction_event.hash))
+                    if newly_created:
+                        findings.append(
+                            FundingLaunderingFindings.funding_newly_created(from_, to, usd, token.upper(),
+                                                                            confirmed_targets[from_]['type'],
+                                                                            transaction_event.hash))
+                    elif usd >= FUNDING_LOW or INFO_ALERTS:
+                        findings.append(
+                            FundingLaunderingFindings.funding(from_, to, usd, token.upper(),
+                                                              confirmed_targets[from_]['type'], transaction_event.hash))
 
         # LAUNDERING
         elif to in confirmed_targets_keys and from_ not in confirmed_targets_keys:
             usd, token = calculate_usd_and_get_symbol(web3, event.address.lower(), ERC20_ABI, value)
-            if usd > TRANSFER_THRESHOLD_IN_USD and not (confirmed_targets[to]['type'] == 'dex' and DEX_DISABLE):
+            if usd > TRANSFER_THRESHOLD_IN_USD and (
+                    confirmed_targets[to]['type'] != 'dex' or not DEX_DISABLE) and (
+                    usd >= LAUNDERING_LOW or INFO_ALERTS):
                 eoa, newly_created = analyze_address(address=from_)
 
                 if len(findings) < 10 and eoa:
