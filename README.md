@@ -40,6 +40,7 @@ address, and~~ if this number is less than the threshold specified in the settin
 
 
 :warning: To enable DEX-related alerts please change `DEX_DISABLE` to `False` in `src/config.py`.
+
 :warning: To enable INFO alerts please change `INFO_ALERTS` to `True` in `src/config.py`.
 
 
