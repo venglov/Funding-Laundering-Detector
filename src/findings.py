@@ -54,7 +54,7 @@ class FundingLaunderingFindings:
     def laundering(from_, to, usd, token, is_new, type_, tx_hash):
         return Finding({
             'name': f'Laundering Alert',
-            'description': f'{from_} is engaged in money laundering behavior using {type_ if not type_ == "unknown" else ""} {from_}',
+            'description': f'{from_} is engaged in money laundering behavior using {type_ if not type_ == "unknown" else ""} {to}',
             'alert_id': 'FLD_Laundering',
             'type': FindingType.Suspicious if get_severity_laundering(usd) != FindingSeverity.Info else FindingType.Info,
             'severity': get_severity_laundering(usd),
