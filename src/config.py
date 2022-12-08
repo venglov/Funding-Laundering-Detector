@@ -1,7 +1,7 @@
 TEST_MODE = False  # The mode when the bot uses test database
-TRANSFERS_TO_CONFIRM = 25  # Amount of transfers to check the address
+TRANSFERS_TO_CONFIRM = 50  # Amount of transfers to check the address
 NEWLY_CREATED_MAX_TRANSACTIONS_AMOUNT = 5  # Address is newly created if its number of txs is below this value
-TRANSFER_THRESHOLD_IN_USD = 20  # Bot doesn't emit alerts if value in usd is below this
+TRANSFER_THRESHOLD_IN_USD = 10  # Bot doesn't emit alerts if value in usd is below this
 FUNDING_CRITICAL = 10000000  # Critical th for funding
 FUNDING_HIGH = 1000000  # High th for funding
 FUNDING_MEDIUM = 100000  # Medium th for funding

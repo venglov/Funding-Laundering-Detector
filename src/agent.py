@@ -164,9 +164,9 @@ def update_possible_targets(address, block):
         return
 
     if address not in possible_targets.keys():
-        possible_targets[address] = {'amount': 1, 'expire_block': block + 50}
+        possible_targets[address] = {'amount': 1, 'expire_block': block + 10}
     else:
-        possible_targets[address] = {'amount': possible_targets[address]['amount'] + 1, 'expire_block': block + 50}
+        possible_targets[address] = {'amount': possible_targets[address]['amount'] + 1, 'expire_block': block + 10}
 
 
 async def analyze_blocks(block_event: forta_agent.block_event.BlockEvent) -> None:
@@ -188,7 +188,7 @@ async def analyze_blocks(block_event: forta_agent.block_event.BlockEvent) -> Non
     newly_confirmed_targets = [k for k, v in possible_targets.items() if v['amount'] >= TRANSFERS_TO_CONFIRM]
     # Remove them from possibles
     possible_targets = {k: v for k, v in possible_targets.items() if
-                        v['expire_block'] <= block and v['amount'] < TRANSFERS_TO_CONFIRM}
+                        v['expire_block'] >= block and v['amount'] < TRANSFERS_TO_CONFIRM}
 
     # Write do the db
     for confirmed_target in newly_confirmed_targets:

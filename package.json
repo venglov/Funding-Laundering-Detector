@@ -1,6 +1,6 @@
 {
   "name": "funding-laundering-detector",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Funding Laundering Detector",
   "chainIds": [
     1, 137, 10, 56, 250, 42161
