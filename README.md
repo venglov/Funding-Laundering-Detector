@@ -49,6 +49,7 @@ address, and~~ if this number is less than the threshold specified in the settin
 
 ## Features
 
+- Internal txs supported
 - Fully asynchronous local database to save the addresses in case of crash
 - Bot is stable after the sudden restart
 - 6 networks supported

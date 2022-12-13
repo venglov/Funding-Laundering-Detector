@@ -89,7 +89,7 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
     if CHAIN_ID == 1 and transaction_event.traces:
         for trace in transaction_event.traces:
             value = trace.action.value
-            if value == 0:
+            if value == 0 or not isinstance(value, int):
                 continue
             from_ = trace.action.from_  # transaction's initiator
             to = trace.action.to  # transaction's target
