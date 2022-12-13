@@ -3,6 +3,9 @@
 ---
 
 ## Changelog
+- 1.1.0 (13.12.2022):
+  - Added support for internal txs on Ethereum
+  - Many minor improvements and fixes since version 1.0.0
 - 1.0.0 (03.12.2022):
   - For newly created accounts new finding type was introduced - FLD_NEW_FUNDING. It has `Critical` severity if account was funded using bridge / mixer / unknown source and `High` severity if it was funded using dex or cex. 
   - `newly_created` field removed from metadata in FLD_FUNDING
