@@ -66,7 +66,10 @@ def get_the_amount_of_tx(address, chain_id):
 
 
 def is_newly_created(address, web3):
-    amount_of_transactions = web3.eth.get_transaction_count(Web3.toChecksumAddress(address.lower()))
+    try:
+        amount_of_transactions = web3.eth.get_transaction_count(Web3.toChecksumAddress(address.lower()))
+    except:
+        amount_of_transactions = NEWLY_CREATED_MAX_TRANSACTIONS_AMOUNT
 
     if amount_of_transactions < NEWLY_CREATED_MAX_TRANSACTIONS_AMOUNT:
         return True

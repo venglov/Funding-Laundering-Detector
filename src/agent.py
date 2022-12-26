@@ -14,7 +14,7 @@ from src.findings import FundingLaunderingFindings
 from src.mixer_bridge_exchange import check_is_mixer_bridge_exchange
 from src.utils import extract_argument
 from src.config import TRANSFERS_TO_CONFIRM, TEST_MODE, TRANSFER_THRESHOLD_IN_USD, DEX_DISABLE, LAUNDERING_LOW, \
-    INFO_ALERTS, FUNDING_LOW
+    INFO_ALERTS, FUNDING_LOW, BLOCKS_IN_MEMORY
 
 initialized = False
 
@@ -104,7 +104,8 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                 # FUNDING
                 if from_ in confirmed_targets_keys and to not in confirmed_targets_keys:  # if we know initiator...
                     if confirmed_targets[from_]['type'] != 'dex' or not DEX_DISABLE:
-                        eoa, newly_created = analyze_address(address=to)  # check is target eoa? and is it newly created?
+                        eoa, newly_created = analyze_address(
+                            address=to)  # check is target eoa? and is it newly created?
                         if len(findings) < 10 and eoa:
                             # append our finding
                             if newly_created:
@@ -122,12 +123,14 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                 elif to in confirmed_targets_keys and from_ not in confirmed_targets_keys:  # if we know target...
                     if not (confirmed_targets[to]['type'] == 'dex' and DEX_DISABLE) and (
                             usd >= LAUNDERING_LOW or INFO_ALERTS):
-                        eoa, newly_created = analyze_address(address=from_)  # check is target eoa? and is it newly created?
+                        eoa, newly_created = analyze_address(
+                            address=from_)  # check is target eoa? and is it newly created?
                         if len(findings) < 10 and eoa:
                             # append our finding
                             findings.append(
                                 FundingLaunderingFindings.laundering(from_, to, usd, token.upper(), newly_created,
-                                                                     confirmed_targets[to]['type'], transaction_event.hash))
+                                                                     confirmed_targets[to]['type'],
+                                                                     transaction_event.hash))
 
     # This part is responsible for the ERC20 token but the logic is basically the same so no comments needed
     for event in [*transaction_event.filter_log(json.dumps(TRANSFER_EVENT_ABI))]:
@@ -178,7 +181,10 @@ def is_eoa(address):
     :param address: target address
     :return: bool
     """
-    return web3.eth.getCode(Web3.toChecksumAddress(address)) == b''
+    try:
+        return web3.eth.getCode(Web3.toChecksumAddress(address)) == b''
+    except:
+        return False
 
 
 def analyze_address(address):
@@ -207,9 +213,10 @@ def update_possible_targets(address, block):
         return
 
     if address not in possible_targets.keys():
-        possible_targets[address] = {'amount': 1, 'expire_block': block + 10}
+        possible_targets[address] = {'amount': 1, 'expire_block': block + BLOCKS_IN_MEMORY}
     else:
-        possible_targets[address] = {'amount': possible_targets[address]['amount'] + 1, 'expire_block': block + 10}
+        possible_targets[address] = {'amount': possible_targets[address]['amount'] + 1,
+                                     'expire_block': block + BLOCKS_IN_MEMORY}
 
 
 async def analyze_blocks(block_event: forta_agent.block_event.BlockEvent) -> None:
