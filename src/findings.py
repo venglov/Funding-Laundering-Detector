@@ -18,7 +18,7 @@ L_CRITICAL_COUNT = 0
 class FundingLaunderingFindings:
 
     @staticmethod
-    def funding(from_, to, usd, token, type_, tx_hash, total_transactions):
+    def funding(from_, to, usd, token, type_, tx_hash, labels, total_transactions):
         global F_LOW_COUNT
         global F_MEDIUM_COUNT
         global F_HIGH_COUNT
@@ -59,11 +59,12 @@ class FundingLaunderingFindings:
                 'usd_volume': usd,
                 'token': token,
                 'tx_hash': tx_hash,
-            }
+            },
+            'labels': labels
         })
 
     @staticmethod
-    def laundering(from_, to, usd, token, is_new, type_, tx_hash, total_transactions):
+    def laundering(from_, to, usd, token, is_new, type_, tx_hash, labels, total_transactions):
         global L_LOW_COUNT
         global L_MEDIUM_COUNT
         global L_HIGH_COUNT
@@ -73,22 +74,21 @@ class FundingLaunderingFindings:
         severity = get_severity_laundering(usd)
         current_count = 0
 
-        match severity:
-            case FindingSeverity.Critical:
-                L_CRITICAL_COUNT += 1
-                current_count = L_CRITICAL_COUNT
-            case FindingSeverity.High:
-                L_HIGH_COUNT += 1
-                current_count = L_HIGH_COUNT
-            case FindingSeverity.Medium:
-                L_MEDIUM_COUNT += 1
-                current_count = L_MEDIUM_COUNT
-            case FindingSeverity.Low:
-                L_LOW_COUNT += 1
-                current_count = L_LOW_COUNT
-            case FindingSeverity.Info:
-                L_INFO_COUNT += 1
-                current_count = L_INFO_COUNT
+        if severity == FindingSeverity.Critical:
+            L_CRITICAL_COUNT += 1
+            current_count = L_CRITICAL_COUNT
+        elif severity == FindingSeverity.High:
+            L_HIGH_COUNT += 1
+            current_count = L_HIGH_COUNT
+        elif severity == FindingSeverity.Medium:
+            L_MEDIUM_COUNT += 1
+            current_count = L_MEDIUM_COUNT
+        elif severity == FindingSeverity.Low:
+            L_LOW_COUNT += 1
+            current_count = L_LOW_COUNT
+        elif severity == FindingSeverity.Info:
+            L_INFO_COUNT += 1
+            current_count = L_INFO_COUNT
 
         return Finding({
             'name': f'Laundering Alert',
@@ -106,24 +106,24 @@ class FundingLaunderingFindings:
                 'usd_volume': usd,
                 'token': token,
                 'tx_hash': tx_hash,
-            }
+            },
+            'labels': labels
         })
 
     @staticmethod
-    def funding_newly_created(from_, to, usd, token, type_, tx_hash, total_transactions):
+    def funding_newly_created(from_, to, usd, token, type_, tx_hash, labels, total_transactions):
         global F_NC_HIGH_COUNT
         global F_NC_CRITICAL_COUNT
 
         severity = FindingSeverity.Critical if type_ != 'exchange' and type_ != 'dex' else FindingSeverity.High
         current_count = 0
 
-        match severity:
-            case FindingSeverity.Critical:
-                F_NC_CRITICAL_COUNT += 1
-                current_count = F_NC_CRITICAL_COUNT
-            case FindingSeverity.High:
-                F_NC_HIGH_COUNT += 1
-                current_count = F_NC_HIGH_COUNT
+        if severity == FindingSeverity.Critical:
+            F_NC_CRITICAL_COUNT += 1
+            current_count = F_NC_CRITICAL_COUNT
+        elif severity == FindingSeverity.High:
+            F_NC_HIGH_COUNT += 1
+            current_count = F_NC_HIGH_COUNT
 
         return Finding({
             'name': f'Newly Created Account Funding Alert',
@@ -139,5 +139,6 @@ class FundingLaunderingFindings:
                 'usd_volume': usd,
                 'token': token,
                 'tx_hash': tx_hash,
-            }
+            },
+            'labels': labels
         })
