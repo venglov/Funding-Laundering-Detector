@@ -3,6 +3,13 @@
 ---
 
 ## Changelog
+- 1.3.1 (19.03.2023):
+  - Alpine changed to Ubuntu
+  - Avalanche chain added
+- 1.3.0 (19.03.2023):
+  - Added labels
+- 1.2.0 (19.03.2023):
+  - Added anomaly score
 - 1.1.0 (13.12.2022):
   - Added support for internal txs on Ethereum
   - Many minor improvements and fixes since version 1.0.0
