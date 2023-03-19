@@ -28,22 +28,21 @@ class FundingLaunderingFindings:
         severity = get_severity(usd)
         current_count = 0
 
-        match severity:
-            case FindingSeverity.Critical:
-                F_CRITICAL_COUNT += 1
-                current_count = F_CRITICAL_COUNT
-            case FindingSeverity.High:
-                F_HIGH_COUNT += 1
-                current_count = F_HIGH_COUNT
-            case FindingSeverity.Medium:
-                F_MEDIUM_COUNT += 1
-                current_count = F_MEDIUM_COUNT
-            case FindingSeverity.Low:
-                F_LOW_COUNT += 1
-                current_count = F_LOW_COUNT
-            case FindingSeverity.Info:
-                F_INFO_COUNT += 1
-                current_count = F_INFO_COUNT
+        if severity == FindingSeverity.Critical:
+            F_CRITICAL_COUNT += 1
+            current_count = F_CRITICAL_COUNT
+        elif severity == FindingSeverity.High:
+            F_HIGH_COUNT += 1
+            current_count = F_HIGH_COUNT
+        elif severity == FindingSeverity.Medium:
+            F_MEDIUM_COUNT += 1
+            current_count = F_MEDIUM_COUNT
+        elif severity == FindingSeverity.Low:
+            F_LOW_COUNT += 1
+            current_count = F_LOW_COUNT
+        elif severity == FindingSeverity.Info:
+            F_INFO_COUNT += 1
+            current_count = F_INFO_COUNT
 
         return Finding({
             'name': f'Funding Alert',
