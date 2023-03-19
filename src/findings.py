@@ -1,48 +1,60 @@
 from forta_agent import Finding, FindingType, FindingSeverity
+from src.utils import get_severity, get_severity_laundering, calculate_anomaly_score
 
-from src.config import FUNDING_CRITICAL, FUNDING_HIGH, FUNDING_MEDIUM, LAUNDERING_CRITICAL, LAUNDERING_HIGH, \
-    LAUNDERING_MEDIUM, LAUNDERING_LOW, FUNDING_LOW
-
-
-def get_severity(usd):
-    if usd >= FUNDING_CRITICAL:
-        return FindingSeverity.Critical
-    elif usd >= FUNDING_HIGH:
-        return FindingSeverity.High
-    elif usd >= FUNDING_MEDIUM:
-        return FindingSeverity.Medium
-    elif usd >= FUNDING_LOW:
-        return FindingSeverity.Low
-    else:
-        return FindingSeverity.Info
-
-
-def get_severity_laundering(usd):
-    if usd >= LAUNDERING_CRITICAL:
-        return FindingSeverity.Critical
-    elif usd >= LAUNDERING_HIGH:
-        return FindingSeverity.High
-    elif usd >= LAUNDERING_MEDIUM:
-        return FindingSeverity.Medium
-    elif usd >= LAUNDERING_LOW:
-        return FindingSeverity.Low
-    else:
-        return FindingSeverity.Info
+F_INFO_COUNT = 0
+F_LOW_COUNT = 0
+F_MEDIUM_COUNT = 0
+F_HIGH_COUNT = 0
+F_CRITICAL_COUNT = 0
+F_NC_HIGH_COUNT = 0
+F_NC_CRITICAL_COUNT = 0
+L_INFO_COUNT = 0
+L_LOW_COUNT = 0
+L_MEDIUM_COUNT = 0
+L_HIGH_COUNT = 0
+L_CRITICAL_COUNT = 0
 
 
 class FundingLaunderingFindings:
 
     @staticmethod
-    def funding(from_, to, usd, token, type_, tx_hash):
+    def funding(from_, to, usd, token, type_, tx_hash, total_transactions):
+        global F_LOW_COUNT
+        global F_MEDIUM_COUNT
+        global F_HIGH_COUNT
+        global F_CRITICAL_COUNT
+        global F_INFO_COUNT
+
+        severity = get_severity(usd)
+        current_count = 0
+
+        match severity:
+            case FindingSeverity.Critical:
+                F_CRITICAL_COUNT += 1
+                current_count = F_CRITICAL_COUNT
+            case FindingSeverity.High:
+                F_HIGH_COUNT += 1
+                current_count = F_HIGH_COUNT
+            case FindingSeverity.Medium:
+                F_MEDIUM_COUNT += 1
+                current_count = F_MEDIUM_COUNT
+            case FindingSeverity.Low:
+                F_LOW_COUNT += 1
+                current_count = F_LOW_COUNT
+            case FindingSeverity.Info:
+                F_INFO_COUNT += 1
+                current_count = F_INFO_COUNT
+
         return Finding({
             'name': f'Funding Alert',
             'description': f'{to} was funded using {type_ if not type_ == "unknown" else ""} {from_}',
             'alert_id': 'FLD_FUNDING',
-            'severity': get_severity(usd),
-            'type': FindingType.Suspicious if get_severity(usd) != FindingSeverity.Info else FindingType.Info,
+            'severity': severity,
+            'type': FindingType.Suspicious if severity != FindingSeverity.Info else FindingType.Info,
             'metadata': {
                 'funded_address': to,
                 'source_address': from_,
+                'anomaly_score': calculate_anomaly_score(current_count, total_transactions),
                 'source_type': type_,
                 'usd_volume': usd,
                 'token': token,
@@ -51,16 +63,44 @@ class FundingLaunderingFindings:
         })
 
     @staticmethod
-    def laundering(from_, to, usd, token, is_new, type_, tx_hash):
+    def laundering(from_, to, usd, token, is_new, type_, tx_hash, total_transactions):
+        global L_LOW_COUNT
+        global L_MEDIUM_COUNT
+        global L_HIGH_COUNT
+        global L_CRITICAL_COUNT
+        global L_INFO_COUNT
+
+        severity = get_severity_laundering(usd)
+        current_count = 0
+
+        match severity:
+            case FindingSeverity.Critical:
+                L_CRITICAL_COUNT += 1
+                current_count = L_CRITICAL_COUNT
+            case FindingSeverity.High:
+                L_HIGH_COUNT += 1
+                current_count = L_HIGH_COUNT
+            case FindingSeverity.Medium:
+                L_MEDIUM_COUNT += 1
+                current_count = L_MEDIUM_COUNT
+            case FindingSeverity.Low:
+                L_LOW_COUNT += 1
+                current_count = L_LOW_COUNT
+            case FindingSeverity.Info:
+                L_INFO_COUNT += 1
+                current_count = L_INFO_COUNT
+
         return Finding({
             'name': f'Laundering Alert',
             'description': f'{from_} is engaged in money laundering behavior using {type_ if not type_ == "unknown" else ""} {to}',
             'alert_id': 'FLD_Laundering',
-            'type': FindingType.Suspicious if get_severity_laundering(usd) != FindingSeverity.Info else FindingType.Info,
-            'severity': get_severity_laundering(usd),
+            'type': FindingType.Suspicious if get_severity_laundering(
+                usd) != FindingSeverity.Info else FindingType.Info,
+            'severity': severity,
             'metadata': {
                 'laundering_address': from_,
                 'newly_created': is_new,
+                'anomaly_score': calculate_anomaly_score(current_count, total_transactions),
                 'target_address': to,
                 'target_type': type_,
                 'usd_volume': usd,
@@ -70,16 +110,31 @@ class FundingLaunderingFindings:
         })
 
     @staticmethod
-    def funding_newly_created(from_, to, usd, token, type_, tx_hash):
+    def funding_newly_created(from_, to, usd, token, type_, tx_hash, total_transactions):
+        global F_NC_HIGH_COUNT
+        global F_NC_CRITICAL_COUNT
+
+        severity = FindingSeverity.Critical if type_ != 'exchange' and type_ != 'dex' else FindingSeverity.High
+        current_count = 0
+
+        match severity:
+            case FindingSeverity.Critical:
+                F_NC_CRITICAL_COUNT += 1
+                current_count = F_NC_CRITICAL_COUNT
+            case FindingSeverity.High:
+                F_NC_HIGH_COUNT += 1
+                current_count = F_NC_HIGH_COUNT
+
         return Finding({
             'name': f'Newly Created Account Funding Alert',
             'description': f'new {to} was funded using {type_ if not type_ == "unknown" else ""} {from_}',
             'alert_id': 'FLD_NEW_FUNDING',
-            'severity': FindingSeverity.Critical if type_ != 'exchange' and type_ != 'dex' else FindingSeverity.High,
+            'severity': severity,
             'type': FindingType.Suspicious,
             'metadata': {
                 'funded_address': to,
                 'source_address': from_,
+                'anomaly_score': calculate_anomaly_score(current_count, total_transactions),
                 'source_type': type_,
                 'usd_volume': usd,
                 'token': token,

@@ -1,6 +1,6 @@
 {
   "name": "funding-laundering-detector",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Funding Laundering Detector",
   "chainIds": [
     1, 137, 10, 56, 250, 42161
@@ -24,7 +24,7 @@
     "test": "python3 -m pytest"
   },
   "dependencies": {
-    "forta-agent": "^0.1.13"
+    "forta-agent": "^0.1.20"
   },
   "devDependencies": {
     "nodemon": "^2.0.8"
