@@ -1,6 +1,7 @@
 from __future__ import annotations
 import asyncio
 import json
+import logging
 
 import forta_agent
 from forta_agent import get_json_rpc_url, EntityType
@@ -13,8 +14,8 @@ from src.db.controller import init_async_db
 from src.findings import FundingLaunderingFindings
 from src.mixer_bridge_exchange import check_is_mixer_bridge_exchange
 from src.utils import extract_argument
-from src.config import TRANSFERS_TO_CONFIRM, TEST_MODE, TRANSFER_THRESHOLD_IN_USD, DEX_DISABLE, LAUNDERING_LOW, \
-    INFO_ALERTS, FUNDING_LOW, BLOCKS_IN_MEMORY
+from src.config import DEFAULT_THRESHOLDS, L2_THRESHOLDS, TRANSFERS_TO_CONFIRM, TEST_MODE, DEX_DISABLE, \
+    INFO_ALERTS, BLOCKS_IN_MEMORY
 
 initialized = False
 
@@ -32,6 +33,11 @@ with open("./src/abi/token_abi.json", 'r') as abi_file:  # get abi from the file
     ERC20_ABI = json.load(abi_file)
 
 TRANSFER_EVENT_ABI = next((x for x in ERC20_ABI if x.get('name', "") == "Transfer"), None)  # event Transfer erc20
+
+if CHAIN_ID in [42161, 10]:
+    thresholds = L2_THRESHOLDS
+else:
+    thresholds = DEFAULT_THRESHOLDS
 
 
 async def analyze_transaction(transaction_event: forta_agent.transaction_event.TransactionEvent):
@@ -62,7 +68,8 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
         usd, token = calculate_usd_for_base_token(transaction_event.transaction.value, CHAIN_ID)
 
         # skip if amount is too small or one of the address is 0x0000...
-        if usd > TRANSFER_THRESHOLD_IN_USD and from_ != NULL_ADDRESS and to != NULL_ADDRESS:
+        if usd > thresholds["TRANSFER_THRESHOLD_IN_USD"] and from_ != NULL_ADDRESS and to != NULL_ADDRESS:
+
             # FUNDING
             if from_ in confirmed_targets_keys and to not in confirmed_targets_keys:  # if we know initiator...
                 DENOMINATOR_COUNT_FUNDING += 1
@@ -91,12 +98,12 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                                                                                 confirmed_targets[from_]['type'],
                                                                                 transaction_event.hash, labels,
                                                                                 DENOMINATOR_COUNT_FUNDING))
-                        elif usd >= FUNDING_LOW or INFO_ALERTS:
+                        elif usd >= thresholds["FUNDING_LOW"] or INFO_ALERTS:
                             findings.append(
                                 FundingLaunderingFindings.funding(from_, to, usd, token.upper(),
                                                                   confirmed_targets[from_]['type'],
                                                                   transaction_event.hash, labels,
-                                                                  DENOMINATOR_COUNT_FUNDING))
+                                                                  DENOMINATOR_COUNT_FUNDING, CHAIN_ID))
 
             # LAUNDERING
             elif to in confirmed_targets_keys and from_ not in confirmed_targets_keys:  # if we know target...
@@ -118,14 +125,15 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                 ]
 
                 if not (confirmed_targets[to]['type'] == 'dex' and DEX_DISABLE) and (
-                        usd >= LAUNDERING_LOW or INFO_ALERTS):
+                        usd >= thresholds["LAUNDERING_LOW"] or INFO_ALERTS):
+
                     eoa, newly_created = analyze_address(address=from_)  # check is target eoa? and is it newly created?
                     if len(findings) < 10 and eoa:
                         # append our finding
                         findings.append(
                             FundingLaunderingFindings.laundering(from_, to, usd, token.upper(), newly_created,
                                                                  confirmed_targets[to]['type'], transaction_event.hash,
-                                                                 labels, DENOMINATOR_COUNT_LAUNDERING))
+                                                                 labels, DENOMINATOR_COUNT_LAUNDERING, CHAIN_ID))
 
     if CHAIN_ID == 1 and transaction_event.traces:
         for trace in transaction_event.traces:
@@ -141,7 +149,7 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
             usd, token = calculate_usd_for_base_token(value, CHAIN_ID)
 
             # skip if amount is too small or one of the address is 0x0000...
-            if usd > TRANSFER_THRESHOLD_IN_USD and from_ != NULL_ADDRESS and to != NULL_ADDRESS:
+            if usd > thresholds["TRANSFER_THRESHOLD_IN_USD"] and from_ != NULL_ADDRESS and to != NULL_ADDRESS:
                 # FUNDING
                 if from_ in confirmed_targets_keys and to not in confirmed_targets_keys:  # if we know initiator...
                     DENOMINATOR_COUNT_FUNDING += 1
@@ -172,12 +180,12 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                                                                                     confirmed_targets[from_]['type'],
                                                                                     transaction_event.hash, labels,
                                                                                     DENOMINATOR_COUNT_FUNDING))
-                            elif usd >= FUNDING_LOW or INFO_ALERTS:
+                            elif usd >= thresholds["FUNDING_LOW"] or INFO_ALERTS:
                                 findings.append(
                                     FundingLaunderingFindings.funding(from_, to, usd, token.upper(),
                                                                       confirmed_targets[from_]['type'],
                                                                       transaction_event.hash, labels,
-                                                                      DENOMINATOR_COUNT_FUNDING))
+                                                                      DENOMINATOR_COUNT_FUNDING, CHAIN_ID))
 
                 # LAUNDERING
                 elif to in confirmed_targets_keys and from_ not in confirmed_targets_keys:  # if we know target...
@@ -199,7 +207,7 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                     ]
 
                     if not (confirmed_targets[to]['type'] == 'dex' and DEX_DISABLE) and (
-                            usd >= LAUNDERING_LOW or INFO_ALERTS):
+                            usd >= thresholds["LAUNDERING_LOW"] or INFO_ALERTS):
                         eoa, newly_created = analyze_address(
                             address=from_)  # check is target eoa? and is it newly created?
                         if len(findings) < 10 and eoa:
@@ -208,7 +216,7 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                                 FundingLaunderingFindings.laundering(from_, to, usd, token.upper(), newly_created,
                                                                      confirmed_targets[to]['type'],
                                                                      transaction_event.hash, labels,
-                                                                     DENOMINATOR_COUNT_LAUNDERING))
+                                                                     DENOMINATOR_COUNT_LAUNDERING, CHAIN_ID))
 
     # This part is responsible for the ERC20 token but the logic is basically the same so no comments needed
     for event in [*transaction_event.filter_log(json.dumps(TRANSFER_EVENT_ABI))]:
@@ -225,10 +233,9 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
         if from_ in confirmed_targets_keys and to not in confirmed_targets_keys:
             DENOMINATOR_COUNT_FUNDING += 1
             usd, token = calculate_usd_and_get_symbol(web3, event.address.lower(), ERC20_ABI, value)
-            if usd > TRANSFER_THRESHOLD_IN_USD and (confirmed_targets[from_]['type'] != 'dex' or not DEX_DISABLE):
+            if usd > thresholds["TRANSFER_THRESHOLD_IN_USD"] and (confirmed_targets[from_]['type'] != 'dex' or not DEX_DISABLE):
                 eoa, newly_created = analyze_address(address=to)
                 if len(findings) < 10 and eoa:
-
                     labels = [
                         {
                             "entity": to,
@@ -250,19 +257,19 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                                                                             confirmed_targets[from_]['type'],
                                                                             transaction_event.hash, labels,
                                                                             DENOMINATOR_COUNT_FUNDING))
-                    elif usd >= FUNDING_LOW or INFO_ALERTS:
+                    elif usd >= thresholds["FUNDING_LOW"] or INFO_ALERTS:
                         findings.append(
                             FundingLaunderingFindings.funding(from_, to, usd, token.upper(),
                                                               confirmed_targets[from_]['type'], transaction_event.hash,
-                                                              labels, DENOMINATOR_COUNT_FUNDING))
+                                                              labels, DENOMINATOR_COUNT_FUNDING, CHAIN_ID))
 
         # LAUNDERING
         elif to in confirmed_targets_keys and from_ not in confirmed_targets_keys:
             DENOMINATOR_COUNT_LAUNDERING += 1
             usd, token = calculate_usd_and_get_symbol(web3, event.address.lower(), ERC20_ABI, value)
-            if usd > TRANSFER_THRESHOLD_IN_USD and (
+            if usd > thresholds["TRANSFER_THRESHOLD_IN_USD"] and (
                     confirmed_targets[to]['type'] != 'dex' or not DEX_DISABLE) and (
-                    usd >= LAUNDERING_LOW or INFO_ALERTS):
+                    usd >= thresholds["LAUNDERING_LOW"] or INFO_ALERTS):
                 eoa, newly_created = analyze_address(address=from_)
 
                 labels = [
@@ -284,7 +291,7 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                     findings.append(
                         FundingLaunderingFindings.laundering(from_, to, usd, token.upper(), newly_created,
                                                              confirmed_targets[to]['type'], transaction_event.hash,
-                                                             labels, DENOMINATOR_COUNT_LAUNDERING))
+                                                             labels, DENOMINATOR_COUNT_LAUNDERING, CHAIN_ID))
 
     return findings
 

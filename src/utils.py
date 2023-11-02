@@ -1,7 +1,6 @@
 from forta_agent import FindingSeverity
 
-from src.config import FUNDING_CRITICAL, FUNDING_HIGH, FUNDING_MEDIUM, LAUNDERING_CRITICAL, LAUNDERING_HIGH, \
-    LAUNDERING_MEDIUM, LAUNDERING_LOW, FUNDING_LOW
+from src.config import DEFAULT_THRESHOLDS, L2_THRESHOLDS
 
 
 def extract_argument(event: dict, argument: str) -> any:
@@ -24,27 +23,37 @@ def get_full_info(object_inst):
     return values
 
 
-def get_severity(usd):
-    if usd >= FUNDING_CRITICAL:
+def get_severity(usd, chain_id):
+    if chain_id in [42161, 10]:
+        thresholds = L2_THRESHOLDS
+    else:
+        thresholds = DEFAULT_THRESHOLDS
+
+    if usd >= thresholds["FUNDING_CRITICAL"]:
         return FindingSeverity.Critical
-    elif usd >= FUNDING_HIGH:
+    elif usd >= thresholds["FUNDING_HIGH"]:
         return FindingSeverity.High
-    elif usd >= FUNDING_MEDIUM:
+    elif usd >= thresholds["FUNDING_MEDIUM"]:
         return FindingSeverity.Medium
-    elif usd >= FUNDING_LOW:
+    elif usd >= thresholds["FUNDING_LOW"]:
         return FindingSeverity.Low
     else:
         return FindingSeverity.Info
 
 
-def get_severity_laundering(usd):
-    if usd >= LAUNDERING_CRITICAL:
+def get_severity_laundering(usd, chain_id):
+    if chain_id in [42161, 10]:
+        thresholds = L2_THRESHOLDS
+    else:
+        thresholds = DEFAULT_THRESHOLDS
+
+    if usd >= thresholds["LAUNDERING_CRITICAL"]:
         return FindingSeverity.Critical
-    elif usd >= LAUNDERING_HIGH:
+    elif usd >= thresholds["LAUNDERING_HIGH"]:
         return FindingSeverity.High
-    elif usd >= LAUNDERING_MEDIUM:
+    elif usd >= thresholds["LAUNDERING_MEDIUM"]:
         return FindingSeverity.Medium
-    elif usd >= LAUNDERING_LOW:
+    elif usd >= thresholds["LAUNDERING_LOW"]:
         return FindingSeverity.Low
     else:
         return FindingSeverity.Info
@@ -63,5 +72,3 @@ def calculate_anomaly_score(alert_count: int, total_transactions: int) -> float:
 
     anomaly_score = alert_count / total_transactions
     return min(anomaly_score, 1.0)
-
-
