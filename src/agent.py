@@ -15,7 +15,7 @@ from src.findings import FundingLaunderingFindings
 from src.mixer_bridge_exchange import check_is_mixer_bridge_exchange
 from src.utils import extract_argument
 from src.config import DEFAULT_THRESHOLDS, L2_THRESHOLDS, TRANSFERS_TO_CONFIRM, TEST_MODE, DEX_DISABLE, \
-    INFO_ALERTS, BLOCKS_IN_MEMORY
+    INFO_ALERTS, BLOCKS_IN_MEMORY_VALUES
 
 initialized = False
 
@@ -39,6 +39,7 @@ if CHAIN_ID in [42161, 10]:
 else:
     thresholds = DEFAULT_THRESHOLDS
 
+blocks_in_memory = BLOCKS_IN_MEMORY_VALUES.get(CHAIN_ID)
 
 async def analyze_transaction(transaction_event: forta_agent.transaction_event.TransactionEvent):
     """
@@ -334,10 +335,10 @@ def update_possible_targets(address, block):
         return
 
     if address not in possible_targets.keys():
-        possible_targets[address] = {'amount': 1, 'expire_block': block + BLOCKS_IN_MEMORY}
+        possible_targets[address] = {'amount': 1, 'expire_block': block + blocks_in_memory}
     else:
         possible_targets[address] = {'amount': possible_targets[address]['amount'] + 1,
-                                     'expire_block': block + BLOCKS_IN_MEMORY}
+                                     'expire_block': block + blocks_in_memory}
 
 
 async def analyze_blocks(block_event: forta_agent.block_event.BlockEvent) -> None:

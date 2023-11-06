@@ -1,6 +1,5 @@
 TEST_MODE = False  # The mode when the bot uses test database
 TRANSFERS_TO_CONFIRM = 50  # Amount of transfers to check the address
-BLOCKS_IN_MEMORY = 50
 NEWLY_CREATED_MAX_TRANSACTIONS_AMOUNT = 5  # Address is newly created if its number of txs is below this value
 DEX_DISABLE = False  # Disables DEX-related alerts
 INFO_ALERTS = False  # Disables INFO alerts
@@ -27,4 +26,14 @@ L2_THRESHOLDS = {
     "LAUNDERING_HIGH": 300000, # High th for laundering
     "LAUNDERING_MEDIUM": 30000, # Medium th for laundering
     "LAUNDERING_LOW": 3000 # Low` th for laundering
+}
+
+BLOCKS_IN_MEMORY_VALUES = {
+    1: 50,
+    10: 300,
+    56: 200,
+    137: 300,
+    250: 860,
+    42161: 2500,
+    43114: 250
 }
