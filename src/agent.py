@@ -14,6 +14,7 @@ from src.db.controller import init_async_db
 from src.findings import FundingLaunderingFindings
 from src.mixer_bridge_exchange import check_is_mixer_bridge_exchange
 from src.utils import extract_argument
+from .constants import WITHDRAW_ETH_FUNCTION_ABI
 from src.config import DEFAULT_THRESHOLDS, L2_THRESHOLDS, TRANSFERS_TO_CONFIRM, TEST_MODE, DEX_DISABLE, \
     INFO_ALERTS, BLOCKS_IN_MEMORY_VALUES
 
@@ -293,6 +294,84 @@ async def analyze_transaction(transaction_event: forta_agent.transaction_event.T
                         FundingLaunderingFindings.laundering(from_, to, usd, token.upper(), newly_created,
                                                              confirmed_targets[to]['type'], transaction_event.hash,
                                                              labels, DENOMINATOR_COUNT_LAUNDERING, CHAIN_ID))
+
+    withdrawETH_invocations = transaction_event.filter_function(WITHDRAW_ETH_FUNCTION_ABI)
+
+    for invocation in withdrawETH_invocations:
+        args = invocation[1]
+        from_ = args['address'].lower()
+        to = args['destination'].lower()
+        value = args['amount']
+        if from_ == NULL_ADDRESS or to == NULL_ADDRESS:
+            continue
+
+        update_possible_targets(from_, block)
+        update_possible_targets(to, block)
+
+        # FUNDING
+        if from_ in confirmed_targets_keys and to not in confirmed_targets_keys:
+            DENOMINATOR_COUNT_FUNDING += 1
+            usd, token = calculate_usd_for_base_token(value, CHAIN_ID)
+            if usd > thresholds["TRANSFER_THRESHOLD_IN_USD"] and (confirmed_targets[from_]['type'] != 'dex' or not DEX_DISABLE):
+                eoa, newly_created = analyze_address(address=to)
+                if len(findings) < 10 and eoa:
+                    labels = [
+                        {
+                            "entity": to,
+                            "entity_type": EntityType.Address,
+                            "label": "eoa",
+                            "confidence": 1.0,
+                        },
+                        {
+                            "entity": from_,
+                            "entity_type": EntityType.Address,
+                            "label": confirmed_targets[from_]['type'],
+                            "confidence": 1.0,
+                        },
+                    ]
+
+                    if newly_created:
+                        findings.append(
+                            FundingLaunderingFindings.funding_newly_created(from_, to, usd, token.upper(),
+                                                                            confirmed_targets[from_]['type'],
+                                                                            transaction_event.hash, labels,
+                                                                            DENOMINATOR_COUNT_FUNDING))
+                    elif usd >= thresholds["FUNDING_LOW"] or INFO_ALERTS:
+                        findings.append(
+                            FundingLaunderingFindings.funding(from_, to, usd, token.upper(),
+                                                              confirmed_targets[from_]['type'], transaction_event.hash,
+                                                              labels, DENOMINATOR_COUNT_FUNDING, CHAIN_ID))
+
+        # LAUNDERING
+        elif to in confirmed_targets_keys and from_ not in confirmed_targets_keys:
+            DENOMINATOR_COUNT_LAUNDERING += 1
+            usd, token = calculate_usd_for_base_token(value, CHAIN_ID)
+            if usd > thresholds["TRANSFER_THRESHOLD_IN_USD"] and (
+                    confirmed_targets[to]['type'] != 'dex' or not DEX_DISABLE) and (
+                    usd >= thresholds["LAUNDERING_LOW"] or INFO_ALERTS):
+                eoa, newly_created = analyze_address(address=from_)
+
+                labels = [
+                    {
+                        "entity": from_,
+                        "entity_type": EntityType.Address,
+                        "label": "eoa",
+                        "confidence": 1.0,
+                    },
+                    {
+                        "entity": to,
+                        "entity_type": EntityType.Address,
+                        "label": confirmed_targets[to]['type'],
+                        "confidence": 1.0,
+                    },
+                ]
+
+                if len(findings) < 10 and eoa:
+                    findings.append(
+                        FundingLaunderingFindings.laundering(from_, to, usd, token.upper(), newly_created,
+                                                             confirmed_targets[to]['type'], transaction_event.hash,
+                                                             labels, DENOMINATOR_COUNT_LAUNDERING, CHAIN_ID))
+
 
     return findings
 
