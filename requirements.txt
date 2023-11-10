@@ -53,3 +53,4 @@ web3==5.23.0
 websockets==9.1
 yarl==1.8.1
 expiring-dict==1.1.0
+requests>=2.27.1

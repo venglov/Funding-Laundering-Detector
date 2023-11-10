@@ -17,6 +17,7 @@ from src.utils import extract_argument
 from .constants import WITHDRAW_ETH_FUNCTION_ABI
 from src.config import DEFAULT_THRESHOLDS, L2_THRESHOLDS, TRANSFERS_TO_CONFIRM, TEST_MODE, DEX_DISABLE, \
     INFO_ALERTS, BLOCKS_IN_MEMORY_VALUES
+from src.blockexplorer import BlockExplorer
 
 initialized = False
 
@@ -25,6 +26,7 @@ global confirmed_targets  # then move them to confirmed
 
 web3 = Web3(Web3.HTTPProvider(get_json_rpc_url()))
 CHAIN_ID = web3.eth.chain_id
+blockexplorer = BlockExplorer(CHAIN_ID)
 NULL_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 DENOMINATOR_COUNT_FUNDING = 0
@@ -395,7 +397,7 @@ def analyze_address(address):
     :return: (bool, bool)
     """
     eoa = is_eoa(address)
-    newly_created = is_newly_created(address, web3)
+    newly_created = is_newly_created(address, blockexplorer)
 
     return eoa, newly_created
 

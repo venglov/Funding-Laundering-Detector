@@ -3,6 +3,7 @@ TRANSFERS_TO_CONFIRM = 50  # Amount of transfers to check the address
 NEWLY_CREATED_MAX_TRANSACTIONS_AMOUNT = 5  # Address is newly created if its number of txs is below this value
 DEX_DISABLE = False  # Disables DEX-related alerts
 INFO_ALERTS = False  # Disables INFO alerts
+MIN_AGE_IN_DAYS = 5
 
 DEFAULT_THRESHOLDS = {
     "TRANSFER_THRESHOLD_IN_USD": 10, # Bot doesn't emit alerts if value in usd is below this
