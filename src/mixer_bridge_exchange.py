@@ -52,7 +52,7 @@ def check_is_mixer_bridge_exchange(address, is_eoa, chain_id):
             return 'bridge'
         elif is_eoa:
             return 'exchange'
-        elif not is_eoa and number_of_word_dex > 0:
+        elif not is_eoa and number_of_word_dex > 2:
             return 'dex'
         else:
             return 'mixer'
