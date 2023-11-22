@@ -41,11 +41,11 @@ def check_is_mixer_bridge_exchange(address, is_eoa, chain_id):
 
     try:
         response = requests.get(f'{base_url}{address.lower()}', headers=headers_etherscan)
-        re_exchange = re.compile(r"exchange|Exchange")
+        re_exchange = re.compile(r"\b(?:exchange|Exchange)\b")
         number_of_word_exchange = len(re_exchange.findall(response.text))
-        re_bridge = re.compile(r"bridge|Bridge")
+        re_bridge = re.compile(r"\b(?:bridge|Bridge)\b")
         number_of_word_bridge = len(re_bridge.findall(response.text))
-        re_dex = re.compile(r"Decentralized Exchange|decentralized exchange|dex|DEX")
+        re_dex = re.compile(r"\b(?:Decentralized Exchange|decentralized exchange|dex|DEX)\b")
         number_of_word_dex = len(re_dex.findall(response.text))
 
         if number_of_word_bridge > number_of_word_exchange and not is_eoa:
