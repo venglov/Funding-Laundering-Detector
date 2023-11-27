@@ -18,14 +18,14 @@ L_CRITICAL_COUNT = 0
 class FundingLaunderingFindings:
 
     @staticmethod
-    def funding(from_, to, usd, token, type_, tx_hash, labels, total_transactions):
+    def funding(from_, to, usd, token, type_, tx_hash, labels, total_transactions, chain_id):
         global F_LOW_COUNT
         global F_MEDIUM_COUNT
         global F_HIGH_COUNT
         global F_CRITICAL_COUNT
         global F_INFO_COUNT
 
-        severity = get_severity(usd)
+        severity = get_severity(usd, chain_id)
         current_count = 0
 
         if severity == FindingSeverity.Critical:
@@ -63,14 +63,14 @@ class FundingLaunderingFindings:
         })
 
     @staticmethod
-    def laundering(from_, to, usd, token, is_new, type_, tx_hash, labels, total_transactions):
+    def laundering(from_, to, usd, token, is_new, type_, tx_hash, labels, total_transactions, chain_id):
         global L_LOW_COUNT
         global L_MEDIUM_COUNT
         global L_HIGH_COUNT
         global L_CRITICAL_COUNT
         global L_INFO_COUNT
 
-        severity = get_severity_laundering(usd)
+        severity = get_severity_laundering(usd, chain_id)
         current_count = 0
 
         if severity == FindingSeverity.Critical:
@@ -94,7 +94,7 @@ class FundingLaunderingFindings:
             'description': f'{from_} is engaged in money laundering behavior using {type_ if not type_ == "unknown" else ""} {to}',
             'alert_id': 'FLD_Laundering',
             'type': FindingType.Suspicious if get_severity_laundering(
-                usd) != FindingSeverity.Info else FindingType.Info,
+                usd, chain_id) != FindingSeverity.Info else FindingType.Info,
             'severity': severity,
             'metadata': {
                 'laundering_address': from_,
